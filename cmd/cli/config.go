@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"time"
 
 	"github.com/spf13/viper"
@@ -32,14 +30,14 @@ type DB struct {
 }
 
 func GetConfig() (Config, error) {
-	files, err := ioutil.ReadDir(".")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// files, err := ioutil.ReadDir(".")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	for _, file := range files {
-		fmt.Println(file.Name(), file.IsDir())
-	}
+	// for _, file := range files {
+	// 	fmt.Println(file.Name(), file.IsDir())
+	// }
 
 	var conf Config
 	viper.AddConfigPath(".")

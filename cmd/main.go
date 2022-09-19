@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/anggiatyoga/hris-api/cmd/cli"
 	"github.com/anggiatyoga/hris-api/internal/platform/webapi/router"
-	"github.com/go-pg/pg"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -28,14 +29,34 @@ func run() error {
 	}
 
 	// CONNECT DB
-	db := pg.Connect(&pg.Options{
-		Addr:     conf.DB.Host,
-		User:     conf.DB.User,
-		Password: conf.DB.Password,
-		Database: conf.DB.Name,
-	})
+	// db := pg.Connect(&pg.Options{
+	// 	Addr:     fmt.Sprintf("%s:%s", conf.DB.Host, conf.DB.Port),
+	// 	User:     conf.DB.User,
+	// 	Password: conf.DB.Password,
+	// 	Database: conf.DB.Name,
+	// })
+	// defer db.Close()
+	// db.AddQueryHook(Hook{})
+
+	var db *sql.DB
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=disable",
+		conf.DB.Host, conf.DB.User, conf.DB.Password, conf.DB.Name, conf.DB.Port, conf.DB.Schema)
+
+	db, err = sql.Open(conf.DB.Driver, dsn)
+	if err != nil {
+		info := fmt.Sprintf("Unable to connect to database: %v\n", err.Error())
+		fmt.Printf(info)
+		panic("connectionString error")
+	}
+
 	defer db.Close()
-	db.AddQueryHook(Hook{})
+
+	err = db.Ping()
+	if err != nil {
+		fmt.Printf("DSN Invalid: ", err.Error())
+		panic("DSN Invalid")
+	}
 
 	// APP SERVER
 	s := &http.Server{
@@ -74,14 +95,14 @@ func run() error {
 	return nil
 }
 
-type Hook struct {
-}
+// type Hook struct {
+// }
 
-func (h Hook) BeforeQuery(e *pg.QueryEvent) {
-	s, _ := e.FormattedQuery()
-	fmt.Printf("query: %s", s)
-}
+// func (h Hook) BeforeQuery(e *pg.QueryEvent) {
+// 	s, _ := e.FormattedQuery()
+// 	fmt.Printf("query: %s\n", s)
+// }
 
-func (h Hook) AfterQuery(e *pg.QueryEvent) {
+// func (h Hook) AfterQuery(e *pg.QueryEvent) {
 
-}
+// }
